@@ -182,7 +182,7 @@ jobs:
           PY
 
       - name: Regenerate the README field table from the live schema
-        if: always() && env.CHECK == 'true' && github.repository == 'brightdata/instagram-scraper-python'
+        if: always() && env.CHECK == 'true' && github.repository == 'brightdata/instagram-scraper-python' && github.ref == 'refs/heads/main'
         run: |
           python - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
           import json
@@ -319,9 +319,10 @@ jobs:
   badge:
     name: Put today's date on the README's "last verified" badge
     needs: [scrape, plan, block, cli-syntax]
-    # scheduled and manual runs only, and only in the main repository: a push is
-    # never followed by a bot commit, and a copy never diverges from the original
-    if: always() && !cancelled() && github.event_name != 'push' && github.repository == 'brightdata/instagram-scraper-python'
+    # scheduled and manual runs on main only, and only in the main repository: a
+    # push is never followed by a bot commit, a copy never diverges from the
+    # original, and a manual run on a branch never tries to push main
+    if: always() && !cancelled() && github.event_name != 'push' && github.repository == 'brightdata/instagram-scraper-python' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
