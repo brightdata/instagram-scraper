@@ -85,14 +85,14 @@ jobs:
 
       - name: Do the README's links still resolve?
         run: |
-          public=$(curl -s -o /dev/null -w '%{http_code}' https://github.com/brightdata/instagram-scraper-python)
+          public=$(curl -s -o /dev/null -w '%{http_code}' https://github.com/brightdata/instagram-scraper)
           failed=0
           for url in $(grep -ohE 'https?://[^ )>"`]+' README.md AGENTS.md | sed 's/[.,]$//' | sort -u); do
             case "$url" in
               *instagram.com/*) continue ;;  # rate-limits runners; the weekly README run fetches these posts anyway
               *zendesk.com/*) continue ;;    # answers 403 to anything that is not a browser
               *mcp.brightdata.com/*) continue ;;  # carries a placeholder token; nothing to check without a real one
-              *github.com/brightdata/instagram-scraper-python*) [ "$public" = "200" ] || continue ;;  # unreachable on a private fork
+              *github.com/brightdata/instagram-scraper*) [ "$public" = "200" ] || continue ;;  # unreachable on a private fork
             esac
             code=$(curl -s -o /dev/null -L --retry 3 --max-time 30 -A "Mozilla/5.0" -w '%{http_code}' "$url" || echo 000)
             if [ "$code" = "200" ]; then echo "200 $url"; else echo "::error::$code $url"; failed=1; fi
@@ -182,7 +182,7 @@ jobs:
           PY
 
       - name: Regenerate the README field table from the live schema
-        if: always() && env.CHECK == 'true' && github.repository == 'brightdata/instagram-scraper-python' && github.ref == 'refs/heads/main'
+        if: always() && env.CHECK == 'true' && github.repository == 'brightdata/instagram-scraper' && github.ref == 'refs/heads/main'
         run: |
           python - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
           import json
@@ -322,7 +322,7 @@ jobs:
     # scheduled and manual runs on main only, and only in the main repository: a
     # push is never followed by a bot commit, a copy never diverges from the
     # original, and a manual run on a branch never tries to push main
-    if: always() && !cancelled() && github.event_name != 'push' && github.repository == 'brightdata/instagram-scraper-python' && github.ref == 'refs/heads/main'
+    if: always() && !cancelled() && github.event_name != 'push' && github.repository == 'brightdata/instagram-scraper' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -339,7 +339,7 @@ jobs:
             label="last check failed"; color="red"
           fi
           today=$(date -u +'%-d %b %Y')
-          line="[![${label}](https://img.shields.io/badge/${label// /%20}-${today// /%20}-${color})](https://github.com/brightdata/instagram-scraper-python/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->"
+          line="[![${label}](https://img.shields.io/badge/${label// /%20}-${today// /%20}-${color})](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->"
           python3 - "$line" <<'PY'
           import pathlib, re, sys
           p = pathlib.Path("README.md"); t = p.read_text(encoding="utf-8")
@@ -361,7 +361,7 @@ jobs:
   alert:
     name: Open or update the live-check issue
     needs: [scrape, block, cli-syntax]
-    if: failure() && github.event_name == 'schedule' && github.repository == 'brightdata/instagram-scraper-python'
+    if: failure() && github.event_name == 'schedule' && github.repository == 'brightdata/instagram-scraper'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

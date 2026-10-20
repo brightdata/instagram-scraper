@@ -1,9 +1,9 @@
 [![Scrape Instagram data with the Instagram Scraper API: profiles, posts, reels, search. Collect or discover by URL and username. Start free.](.github/banner.png)](https://brightdata.com/products/web-scraper/instagram?utm_source=github)
 
-# instagram-scraper-python
+# instagram-scraper
 
-[![Live check](https://github.com/brightdata/instagram-scraper-python/actions/workflows/live.yml/badge.svg)](https://github.com/brightdata/instagram-scraper-python/actions/workflows/live.yml)
-[![last check failed](https://img.shields.io/badge/last%20check%20failed-19%20Oct%202026-red)](https://github.com/brightdata/instagram-scraper-python/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->
+[![Live check](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml/badge.svg)](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml)
+[![last check failed](https://img.shields.io/badge/last%20check%20failed-19%20Oct%202026-red)](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->
 
 [Quickstart](#quickstart) · [Command](#or-run-it-as-a-command) · [Endpoints](#the-rest-of-the-api) · [Data](#the-data) · [Errors](#when-it-fails) · [Coding agents](#coding-agents) · [Docs](https://docs.brightdata.com/products/scrapers/instagram/introduction) · [Support](#support)
 
@@ -72,7 +72,7 @@ The command in this repo does the same for several accounts and writes one
 JSON file.
 
 ```bash
-pip install git+https://github.com/brightdata/instagram-scraper-python
+pip install git+https://github.com/brightdata/instagram-scraper
 instagram-scraper nasa natgeo
 ```
 
@@ -473,11 +473,15 @@ bdata pipelines run gd_ltppn085pokosxh13 collect_by_url "https://www.instagram.c
 ## Support
 
 Bugs in this repo:
-[open an issue](https://github.com/brightdata/instagram-scraper-python/issues), and
+[open an issue](https://github.com/brightdata/instagram-scraper/issues), and
 [CONTRIBUTING.md](CONTRIBUTING.md) says what to put in it.
 Anything about the API, your account or your credits:
 [Bright Data support](https://brightdata.zendesk.com/hc/en-us/requests/new).
 
 ## License
 
-MIT.
+[Apache 2.0](LICENSE).
+
+## Node.js version
+
+The same Instagram scraper is available for Node.js: [brightdata/instagram-scraper-node](https://github.com/brightdata/instagram-scraper-node).
