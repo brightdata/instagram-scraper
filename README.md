@@ -406,12 +406,12 @@ once, or use `bdata login --device` over SSH and in CI:
 
 ```bash
 npx -p @brightdata/cli bdata login
-npx -p @brightdata/cli bdata pipelines instagram_posts "https://www.instagram.com/p/Db_SePSltfz/"
+npx -p @brightdata/cli bdata pipelines run gd_lk5ns7kz21pck8jpis collect_by_url "https://www.instagram.com/p/Db_SePSltfz/"
 ```
 
-The CLI's four Instagram pipelines each take a post, reel or profile URL and
-return that one record. Recent posts from a profile is the SDK call in the
-Quickstart; the CLI has no route for it.
+The CLI runs a scraper by its dataset ID. The four Instagram scrapers each
+take a post, reel or profile URL and return that one record;
+`bdata pipelines search instagram` lists their IDs and methods.
 
 `npx skills add brightdata/skills` teaches Claude Code, Cursor and Codex these
 commands and the docs, so plain language works afterwards. Full guide:
@@ -432,43 +432,41 @@ Data connects to, from LangChain to Zapier and n8n:
 <details>
 <summary>Every Instagram command the CLI has, each run today</summary>
 
-Four types: `instagram_profiles`, `instagram_posts`, `instagram_reels`,
-`instagram_comments`. Each takes URLs, prints JSON, and costs one credit per
-record. Prefix each command with `npx -p @brightdata/cli`, or install once with
+Four scrapers, each run with `bdata pipelines run <dataset_id> collect_by_url`:
+profiles `gd_l1vikfch901nx3by4`, posts `gd_lk5ns7kz21pck8jpis`, reels
+`gd_lyclm20il4r5helnj` and comments `gd_ltppn085pokosxh13`. Each takes URLs,
+prints JSON, and costs one credit per record. Prefix each command with `npx -p @brightdata/cli`, or install once with
 `npm i -g @brightdata/cli`.
 
 ```bash
-bdata pipelines instagram_profiles "https://www.instagram.com/nasa/" --pretty
+bdata pipelines run gd_l1vikfch901nx3by4 collect_by_url "https://www.instagram.com/nasa/" --pretty
 ```
 
 1 record, 25 fields, 50 seconds. `"account": "nasa"`, `"followers": 104396028`.
 
 ```bash
-bdata pipelines instagram_posts "https://www.instagram.com/p/Dc1W1uFj-CW/" --format csv -o posts.csv
-```
-
-```
-Triggered collection with snapshot ID:sd_mtrcu6qpyebqgtcjg
-Output written to posts.csv
+bdata pipelines run gd_lk5ns7kz21pck8jpis collect_by_url "https://www.instagram.com/p/Dc1W1uFj-CW/" --format csv -o posts.csv
 ```
 
 37 seconds. The CSV header carries the same field names as the table below.
 
 ```bash
-bdata pipelines instagram_reels "https://www.instagram.com/reel/DcMXl1IPNtB/" --pretty
+bdata pipelines run gd_lyclm20il4r5helnj collect_by_url "https://www.instagram.com/reel/DcMXl1IPNtB/" --pretty
 ```
 
 1 record, 25 fields, 23 seconds.
 
 ```bash
-bdata pipelines instagram_comments "https://www.instagram.com/p/Dc1W1uFj-CW/" --pretty
+bdata pipelines run gd_ltppn085pokosxh13 collect_by_url "https://www.instagram.com/p/Dc1W1uFj-CW/" --pretty
 ```
 
 5 records, 11 fields, 9 seconds. One credit per comment, so check the post's
 `num_comments` first.
 
-`bdata pipelines list` prints every type. `bdata pipelines --help` shows
-`--format json|csv|ndjson|jsonl`, `-o FILE` and `--timeout`.
+`bdata pipelines info <dataset_id> <method>` shows a scraper's input fields.
+`bdata pipelines run --help` shows `--format json|csv|ndjson|jsonl`, `-o FILE`,
+`--timeout` and `--async`. CLI 0.4.0 replaced the old
+`bdata pipelines instagram_posts <url>` form with these commands.
 
 </details>
 
