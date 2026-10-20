@@ -11,6 +11,13 @@
 #   every Monday at 06:00 UTC: the same, plus every code block in the README,
 #     about 35 credits and 30 minutes
 #
+# Every run also checks, for free and with no secret, that the newest Bright
+# Data CLI still accepts every CLI line in the README. Readers run `npx -p
+# @brightdata/cli`, which is always the newest release, while the jobs that hold
+# the secret run the version pinned in BDATA_CLI below. CLI 0.4.0 removed the
+# README's commands and only the Monday run noticed; this check sees it the
+# same day. When it warns about a new release, bump BDATA_CLI.
+#
 # A slow day at the API shows up as a red run. Rerun it before reading more
 # into it.
 #
@@ -47,6 +54,9 @@ on:
 permissions:
   contents: write  # the daily check commits the regenerated field table
 
+env:
+  BDATA_CLI: "0.4.0"  # pinned for the jobs that hold the API secret; bump after cli-syntax passes
+
 concurrency:
   group: live-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'push' }}  # only the newest commit matters
@@ -68,10 +78,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.12"
-      - name: Install the package and the Bright Data CLI
-        run: |
-          pip install -e .
-          npm i -g @brightdata/cli@0.3.4  # pinned: this job holds the API secret
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install the package
+        run: pip install -e .
 
       - name: Do the README's links still resolve?
         run: |
@@ -251,40 +261,7 @@ jobs:
       - id: list
         env:
           ONLY: ${{ inputs.only }}
-        run: |
-          python - <<'PY' >> "$GITHUB_OUTPUT"
-          import os
-          import json
-          import pathlib
-          import re
-
-          readme = pathlib.Path("README.md").read_text(encoding="utf-8")
-          # never execute anything inside the generated field table: its text comes from
-          # the API, and a fence in a description must not become a command
-          readme = re.sub(r"<!-- fields:start -->.*?<!-- fields:end -->", "", readme, flags=re.S)
-          SKIP = ("pip install", "export ", "npm i", "npm install",
-                  "npx -p @brightdata/cli bdata login", "bdata login")
-          blocks, heading, seen = [], "README", {}
-          for m in re.finditer(r"^#{2,3} ([^\n]+)$|```(python|bash)\n(.*?)```", readme, re.M | re.S):
-              if m.group(1):
-                  heading = m.group(1).strip()  # a block is named after its section, not its first line
-                  continue
-              lang, code = m.group(2), m.group(3)
-              lines = [l for l in code.splitlines() if l.strip() and not l.strip().startswith("#")]
-              if lang == "bash":
-                  lines = [l for l in lines if not l.startswith(SKIP)]
-                  if not lines:
-                      continue
-                  # the CLI cannot open a browser here; the secret goes in by flag, and
-                  # only the shell ever sees its value
-                  code = "\n".join(l + ' -k "$BRIGHTDATA_API_TOKEN"' if "bdata pipelines" in l else l for l in lines)
-              seen[heading] = seen.get(heading, 0) + 1
-              title = heading if seen[heading] == 1 else f"{heading} ({seen[heading]})"
-              blocks.append({"lang": lang, "title": title[:50], "code": code})
-          wanted = {int(n) for n in os.environ.get("ONLY", "").split(",") if n.strip()}
-          out = [{"n": i + 1, "lang": b["lang"], "title": b["title"]} for i, b in enumerate(blocks) if not wanted or i + 1 in wanted]
-          print("blocks=" + json.dumps(out))
-          PY
+        run: python .github/scripts/readme_blocks.py list >> "$GITHUB_OUTPUT"
 
   block:
     name: "${{ matrix.n }}. ${{ matrix.title }}"
@@ -302,72 +279,46 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - name: Install the package and, for CLI blocks, the Bright Data CLI
+        env:
+          LANG_: ${{ matrix.lang }}
         run: |
           pip install -e .
-          if [ "${{ matrix.lang }}" = "bash" ]; then npm i -g @brightdata/cli@0.3.4; fi
+          if [ "$LANG_" = "bash" ]; then npm i -g "@brightdata/cli@$BDATA_CLI"; fi
       - name: Run block ${{ matrix.n }} exactly as the README shows it
         env:
           N: ${{ matrix.n }}
         run: |
           set -o pipefail  # without this, tee's exit code hides a failing block
-          python - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
-          import os
-          import subprocess
-          import sys
-          import time
-          import json
-          import pathlib
-          import re
+          python .github/scripts/readme_blocks.py run "$N" | tee -a "$GITHUB_STEP_SUMMARY"
 
-          readme = pathlib.Path("README.md").read_text(encoding="utf-8")
-          # never execute anything inside the generated field table: its text comes from
-          # the API, and a fence in a description must not become a command
-          readme = re.sub(r"<!-- fields:start -->.*?<!-- fields:end -->", "", readme, flags=re.S)
-          SKIP = ("pip install", "export ", "npm i", "npm install",
-                  "npx -p @brightdata/cli bdata login", "bdata login")
-          blocks, heading, seen = [], "README", {}
-          for m in re.finditer(r"^#{2,3} ([^\n]+)$|```(python|bash)\n(.*?)```", readme, re.M | re.S):
-              if m.group(1):
-                  heading = m.group(1).strip()  # a block is named after its section, not its first line
-                  continue
-              lang, code = m.group(2), m.group(3)
-              lines = [l for l in code.splitlines() if l.strip() and not l.strip().startswith("#")]
-              if lang == "bash":
-                  lines = [l for l in lines if not l.startswith(SKIP)]
-                  if not lines:
-                      continue
-                  # the CLI cannot open a browser here; the secret goes in by flag, and
-                  # only the shell ever sees its value
-                  code = "\n".join(l + ' -k "$BRIGHTDATA_API_TOKEN"' if "bdata pipelines" in l else l for l in lines)
-              seen[heading] = seen.get(heading, 0) + 1
-              title = heading if seen[heading] == 1 else f"{heading} ({seen[heading]})"
-              blocks.append({"lang": lang, "title": title[:50], "code": code})
-          b = blocks[int(os.environ["N"]) - 1]
-          argv = ["bash", "-e", "-c", b["code"]] if b["lang"] == "bash" else [sys.executable, "-c", b["code"]]
-          secret = os.environ.get("BRIGHTDATA_API_TOKEN", "")
-          for attempt in (1, 2):
-              started = time.time()
-              try:
-                  run = subprocess.run(argv, capture_output=True, text=True, timeout=480)
-              except subprocess.TimeoutExpired:
-                  run = subprocess.CompletedProcess(argv, 1, "", "block timeout: no result within 8 minutes")
-              secs = round(time.time() - started)
-              out, err = run.stdout.strip(), run.stderr.strip()
-              if secret:  # summaries are not secret-masked the way logs are
-                  out, err = out.replace(secret, "***"), err.replace(secret, "***")
-              ok = run.returncode == 0 and bool(out if b["lang"] == "python" else out or err)
-              if ok or ((out or err) and "timeout" not in (out + err).lower()):
-                  break
-              time.sleep(30)  # the API timed out or answered with nothing at all; one retry
-          shown = (out.splitlines() or [""])[0] if ok else (err.splitlines() or out.splitlines() or ["no output"])[-1]
-          print(f"\n`{b['title']}`: {'ok' if ok else 'FAILED'} in {secs}s\n\n    {shown[:120]}")
-          sys.exit(0 if ok else 1)
-          PY
+  cli-syntax:
+    name: Does the newest CLI still accept the README's commands?
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # no secret here on purpose: this job runs whatever npm calls latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+      - name: Install the newest CLI, as a reader's npx would
+        run: |
+          npm i -g @brightdata/cli@latest
+          latest=$(bdata --version)
+          echo "Newest CLI: $latest. Pinned for the live jobs: $BDATA_CLI."
+          if [ "$latest" != "$BDATA_CLI" ]; then
+            echo "::warning::@brightdata/cli $latest is out; the live jobs still pin $BDATA_CLI. Bump BDATA_CLI in live.yml once this job passes."
+          fi
+      - name: Run each README CLI line with a key the API rejects
+        env:
+          BDATA_CLI: ""  # use the newest, not the pin
+        run: |
+          set -o pipefail
+          python3 .github/scripts/readme_blocks.py cli-syntax | tee -a "$GITHUB_STEP_SUMMARY"
 
   badge:
     name: Put today's date on the README's "last verified" badge
-    needs: [scrape, plan, block]
+    needs: [scrape, plan, block, cli-syntax]
     # scheduled and manual runs only, and only in the main repository: a push is
     # never followed by a bot commit, and a copy never diverges from the original
     if: always() && !cancelled() && github.event_name != 'push' && github.repository == 'brightdata/instagram-scraper-python'
@@ -379,8 +330,9 @@ jobs:
         env:
           SCRAPE: ${{ needs.scrape.result }}
           BLOCKS: ${{ needs.block.result }}  # skipped on the daily run, and that is fine
+          SYNTAX: ${{ needs.cli-syntax.result }}
         run: |
-          if [ "$SCRAPE" = "success" ] && { [ "$BLOCKS" = "success" ] || [ "$BLOCKS" = "skipped" ]; }; then
+          if [ "$SCRAPE" = "success" ] && [ "$SYNTAX" = "success" ] && { [ "$BLOCKS" = "success" ] || [ "$BLOCKS" = "skipped" ]; }; then
             label="last verified"; color="brightgreen"
           else
             label="last check failed"; color="red"
@@ -398,7 +350,33 @@ jobs:
           if git diff --quiet; then echo "badge already shows $today"; exit 0; fi
           git config user.name "anil-bd"
           git config user.email "210667061+anil-bd@users.noreply.github.com"
-          git commit -qam "Last verified $today (automated daily check)"
+          git commit -qam "${label^} $today (automated daily check)"
           git pull -q --rebase origin main
           git push -q origin main
           echo "badge now shows: $label, $today"
+
+  # A red scheduled run used to show only as a red badge. Open one issue and keep
+  # adding to it, so a failure reaches the people watching the repository.
+  alert:
+    name: Open or update the live-check issue
+    needs: [scrape, block, cli-syntax]
+    if: failure() && github.event_name == 'schedule' && github.repository == 'brightdata/instagram-scraper-python'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULTS: "scrape ${{ needs.scrape.result }}, README blocks ${{ needs.block.result }}, CLI syntax ${{ needs.cli-syntax.result }}"
+        run: |
+          title="Live check is failing"
+          body="$(date -u +'%-d %b %Y'): $RESULTS. $RUN"
+          n=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
