@@ -70,9 +70,9 @@ jobs:
           def block(text, lang):
               return re.search(r"```" + lang + r"\n(.*?)```", text, re.S).group(1)
 
-          quick = section("Quickstart")
+          quick = section("How to scrape Instagram data with Python")
           install, snippet = block(quick, "bash"), block(quick, "python")
-          command = block(section("Or run it as a command"), "bash")
+          command = block(section("Bulk Instagram scraper CLI"), "bash")
           for required, where in (("pip install brightdata-sdk", install),
                                   ("SyncBrightDataClient", snippet),
                                   ("instagram-scraper", command)):
