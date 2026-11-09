@@ -323,17 +323,23 @@ jobs:
     # push is never followed by a bot commit, a copy never diverges from the
     # original, and a manual run on a branch never tries to push main
     if: always() && !cancelled() && github.event_name != 'push' && github.repository == 'brightdata/instagram-scraper' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write  # commits the badge line
+      actions: read    # counts this run's job results
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
       - name: Rewrite one badge line, commit only if it changed
         env:
-          SCRAPE: ${{ needs.scrape.result }}
-          BLOCKS: ${{ needs.block.result }}  # skipped on the daily run, and that is fine
-          SYNTAX: ${{ needs.cli-syntax.result }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "$SCRAPE" = "success" ] && [ "$SYNTAX" = "success" ] && { [ "$BLOCKS" = "success" ] || [ "$BLOCKS" = "skipped" ]; }; then
+          # Two states: red only when every check in this run failed. One passing
+          # check keeps the badge green; the run itself still shows which failed.
+          read -r passed failed < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '[.jobs[] | select((.name | startswith("Put today") or startswith("Open or update") or . == "List the README blocks") | not)] as $j | "\([$j[] | select(.conclusion == "success")] | length) \([$j[] | select(.conclusion == "failure")] | length)"') || true
+          echo "checks passed: ${passed:-0}, failed: ${failed:-0}"
+          if [ "${passed:-0}" -gt 0 ]; then
             label="last verified"; color="brightgreen"
           else
             label="last check failed"; color="red"
