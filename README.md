@@ -1,9 +1,9 @@
-[![Scrape Instagram data with the Instagram Scraper API: profiles, posts, reels, search. Collect or discover by URL and username. Start free.](.github/banner.png)](https://brightdata.com/products/web-scraper/instagram?utm_source=github)
+[![Scrape Instagram data with the Instagram Scraper API: profiles, posts, reels, search. Collect or discover by URL and username. Start free.](.github/banner.png)](https://brightdata.com/products/web-scraper/instagram?utm_source=github&utm_medium=referral&utm_content=instagram-scraper)
 
 # Instagram scraper for Python
 
 Scrape Instagram profiles, posts, reels and comments to JSON with Python. No Instagram login, no access token, no browser.
-Built on the [Bright Data Instagram Scraper API](https://brightdata.com/products/web-scraper/instagram?utm_source=github). New accounts get 5,000 free credits a month.
+Built on the [Bright Data Instagram Scraper API](https://brightdata.com/products/web-scraper/instagram?utm_source=github&utm_medium=referral&utm_content=instagram-scraper). New accounts get 5,000 free credits a month.
 
 [![Live check](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml/badge.svg)](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml)
 [![last verified](https://img.shields.io/badge/last%20verified-9%20Nov%202026-brightgreen)](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->
@@ -12,7 +12,7 @@ Built on the [Bright Data Instagram Scraper API](https://brightdata.com/products
 
 Instagram profiles, posts, reels and comments as JSON, in Python. No Instagram
 login, no browser. Built on the
-[Bright Data Instagram Scraper API](https://brightdata.com/products/web-scraper/instagram?utm_source=github).
+[Bright Data Instagram Scraper API](https://brightdata.com/products/web-scraper/instagram?utm_source=github&utm_medium=referral&utm_content=instagram-scraper).
 
 Uses the [Bright Data Python SDK](https://github.com/brightdata/sdk-python).
 Full API docs:
