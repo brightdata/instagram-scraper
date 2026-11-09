@@ -3,7 +3,7 @@
 # Instagram scraper for Python
 
 [![Live check](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml/badge.svg)](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml)
-[![last check failed](https://img.shields.io/badge/last%20check%20failed-9%20Nov%202026-red)](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->
+[![last verified](https://img.shields.io/badge/last%20verified-9%20Nov%202026-brightgreen)](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->
 
 [Quickstart](#how-to-scrape-instagram-data-with-python) · [No login](#scrape-instagram-without-login-or-an-access-token) · [CLI](#bulk-instagram-scraper-cli) · [Endpoints](#scrape-instagram-posts-profiles-reels-and-comments) · [Data](#instagram-post-data-fields-json) · [Errors](#instagram-scraper-errors) · [MCP and Claude Code](#instagram-mcp-server-and-claude-code-skill) · [Free credits](#is-this-instagram-scraper-free) · [Docs](https://docs.brightdata.com/products/scrapers/instagram/introduction) · [Support](#support)
 
