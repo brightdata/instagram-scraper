@@ -81,7 +81,7 @@ The command in this repo runs the Python quickstart for several accounts at
 once and writes one JSON file.
 
 ```bash
-pip install git+https://github.com/brightdata/instagram-scraper
+pip install brightdata-instagram-scraper
 instagram-scraper nasa natgeo
 ```
 
