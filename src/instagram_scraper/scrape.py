@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from brightdata import SyncBrightDataClient
 
@@ -28,10 +29,19 @@ _HANDLE = re.compile(r"^[A-Za-z0-9._]{1,30}$")
 
 
 def clean_handle(handle: str) -> str:
-    """Accept nasa, @nasa, or a profile URL. Reject anything else."""
-    cleaned = (handle or "").strip().rstrip("/").lstrip("@")
-    if "instagram.com/" in cleaned:
-        cleaned = cleaned.rsplit("/", 1)[-1]
+    """Accept nasa, @nasa, or a profile URL. Reject anything else.
+
+    A URL counts only when its host is instagram.com or a subdomain of it, so
+    https://evil.com/instagram.com/nasa is rejected rather than read as nasa.
+    """
+    cleaned = (handle or "").strip().lstrip("@")
+    if "/" in cleaned:
+        url = urlsplit(cleaned if "://" in cleaned else f"https://{cleaned}")
+        host = (url.hostname or "").lower()
+        if host != "instagram.com" and not host.endswith(".instagram.com"):
+            raise ValueError(f"{handle!r} is not an Instagram handle")
+        segments = [part for part in url.path.split("/") if part]
+        cleaned = segments[0] if segments else ""
     if not _HANDLE.match(cleaned):
         raise ValueError(f"{handle!r} is not an Instagram handle")
     return cleaned

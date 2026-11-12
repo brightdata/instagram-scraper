@@ -43,6 +43,24 @@ def test_clean_handle_takes_a_handle_an_at_sign_or_a_url():
         clean_handle("not a handle")
 
 
+def test_clean_handle_reads_the_handle_from_any_instagram_profile_url():
+    assert clean_handle("instagram.com/nasa") == "nasa"
+    assert clean_handle("https://instagram.com/nasa/reels/") == "nasa"
+    assert clean_handle("https://www.instagram.com/nasa?igsh=abc123") == "nasa"
+    assert clean_handle("nat.geo") == "nat.geo"
+
+
+def test_clean_handle_rejects_a_url_on_another_host():
+    for url in (
+        "https://evil.com/instagram.com/nasa",
+        "https://instagram.com.evil.com/nasa",
+        "https://notinstagram.com/nasa",
+        "https://www.instagram.com/",
+    ):
+        with pytest.raises(ValueError):
+            clean_handle(url)
+
+
 def test_an_empty_window_is_zero_records_not_a_failure():
     row = {"error": EMPTY_WINDOW, "error_code": "dead_page", "input": {"url": "x"}}
     outcome = scrape(["nasa"], client=stub([row]))[0]
