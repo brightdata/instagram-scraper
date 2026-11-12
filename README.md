@@ -1,4 +1,4 @@
-[![Scrape Instagram data with the Instagram Scraper API: profiles, posts, reels, search. Collect or discover by URL and username. Start free.](.github/banner.png)](https://brightdata.com/products/web-scraper/instagram?utm_source=github&utm_medium=referral&utm_content=instagram-scraper)
+[![Scrape Instagram data with the Instagram Scraper API: profiles, posts, reels, search. Collect or discover by URL and username. Start free.](https://raw.githubusercontent.com/brightdata/instagram-scraper/main/.github/banner.png)](https://brightdata.com/products/web-scraper/instagram?utm_source=github&utm_medium=referral&utm_content=instagram-scraper)
 
 # Instagram scraper for Python
 
@@ -387,7 +387,7 @@ of these 44.
 ```
 
 The whole file, one post with every field, is
-[examples/sample_output.json](examples/sample_output.json).
+[examples/sample_output.json](https://github.com/brightdata/instagram-scraper/blob/main/examples/sample_output.json).
 
 </details>
 
@@ -493,7 +493,7 @@ per comment, so the free credits cover 5,000 posts a month.
 
 Bugs in this repo:
 [open an issue](https://github.com/brightdata/instagram-scraper/issues), and
-[CONTRIBUTING.md](CONTRIBUTING.md) says what to put in it.
+[CONTRIBUTING.md](https://github.com/brightdata/instagram-scraper/blob/main/CONTRIBUTING.md) says what to put in it.
 Anything about the API, your account or your credits:
 [Bright Data support](https://brightdata.zendesk.com/hc/en-us/requests/new).
 
