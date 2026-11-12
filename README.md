@@ -499,7 +499,7 @@ Anything about the API, your account or your credits:
 
 ## License
 
-[Apache 2.0](LICENSE).
+[Apache 2.0](https://github.com/brightdata/instagram-scraper/blob/main/LICENSE).
 
 ## Instagram scraper for Node.js
 
