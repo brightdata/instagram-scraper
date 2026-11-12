@@ -1,14 +1,14 @@
 # The only workflow that calls the real API. Needs the BRIGHTDATA_API_TOKEN
 # secret and spends about one credit per post.
 #
-# Four ways it runs:
+# Three ways it runs:
 #   on every push to main: one post from nasa and the README's links, one
 #     credit and about three minutes, so a broken commit shows up at once.
 #     A newer push cancels a run still going for an older commit.
 #   by hand, from the Actions tab, to scrape whatever accounts you choose
-#   every day at 06:00 UTC except Monday: one post from nasa, the async
+#   every Monday at 06:00 UTC: one post from nasa, the async
 #     path, and the field table, about two credits
-#   every Monday at 06:00 UTC: the same, plus every code block in the README,
+#   in the same Monday run: every code block in the README,
 #     about 35 credits and 30 minutes
 #
 # Every run also checks, for free and with no secret, that the newest Bright
@@ -21,7 +21,7 @@
 # A slow day at the API shows up as a red run. Rerun it before reading more
 # into it.
 #
-# The daily and Monday runs end by rewriting the "last verified" badge line at
+# The Monday run ends by rewriting the "last verified" badge line at
 # the top of README.md with today's date, and committing it if it changed. Push
 # runs never do this, so your own push is never followed by a bot commit. Only
 # the main repository commits; a copy of the repository just runs the checks.
@@ -33,7 +33,6 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 6 * * 0,2-6"  # daily smoke, every day except Monday
     - cron: "0 6 * * 1"    # Monday: the whole README
   workflow_dispatch:
     inputs:
@@ -52,7 +51,7 @@ on:
         default: ""
 
 permissions:
-  contents: write  # the daily check commits the regenerated field table
+  contents: write  # the weekly check commits the regenerated field table
 
 env:
   BDATA_CLI: "0.4.0"  # pinned for the jobs that hold the API secret; bump after cli-syntax passes
@@ -68,7 +67,7 @@ jobs:
     timeout-minutes: 20  # fetch, async path, table; the README blocks have their own jobs
     env:
       BRIGHTDATA_API_TOKEN: ${{ secrets.BRIGHTDATA_API_TOKEN }}
-      # On the daily schedule there are no inputs, so fall back to one cheap post.
+      # On the weekly schedule there are no inputs, so fall back to one cheap post.
       HANDLES: ${{ inputs.handles || 'nasa' }}
       LIMIT: ${{ inputs.limit || '1' }}
       # the async path and the field table run on every scheduled run and on request
@@ -162,7 +161,7 @@ jobs:
               print("</details>")
           PY
 
-      # The two daily checks. Discovery is already covered by the step above.
+      # The two smoke checks. Discovery is already covered by the step above.
       - name: Does the async trigger, status, fetch path still work?
         if: env.CHECK == 'true'
         run: |
@@ -216,7 +215,7 @@ jobs:
               "<details>",
               f"<summary>All {len(fields)} fields, with type and description</summary>",
               "",
-              "Regenerated every day from the dataset schema, via",
+              "Regenerated every week from the dataset schema, via",
               "`client.datasets.instagram_posts.get_metadata()`, so it cannot go stale. A",
               f"post carries the fields that apply to it; the sample file has {len(sample)}",
               f"of these {len(fields)}.",
@@ -240,7 +239,7 @@ jobs:
           git config user.name "anil-bd"
           git config user.email "210667061+anil-bd@users.noreply.github.com"
           git add README.md
-          git commit -m "Regenerate the field table from the live schema (automated daily check)"
+          git commit -m "Regenerate the field table from the live schema (automated weekly check)"
           git pull --rebase origin main
           git push
           echo "Committed the regenerated table."
@@ -351,7 +350,7 @@ jobs:
             label="last check failed"; color="red"
           fi
           today=$(date -u +'%-d %b %Y')
-          line="[![${label}](https://img.shields.io/badge/${label// /%20}-${today// /%20}-${color})](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml) <!-- verified: rewritten by the daily run -->"
+          line="[![${label}](https://img.shields.io/badge/${label// /%20}-${today// /%20}-${color})](https://github.com/brightdata/instagram-scraper/actions/workflows/live.yml) <!-- verified: rewritten by the weekly run -->"
           python3 - "$line" <<'PY'
           import pathlib, re, sys
           p = pathlib.Path("README.md"); t = p.read_text(encoding="utf-8")
@@ -363,7 +362,7 @@ jobs:
           if git diff --quiet; then echo "badge already shows $today"; exit 0; fi
           git config user.name "anil-bd"
           git config user.email "210667061+anil-bd@users.noreply.github.com"
-          git commit -qam "${label^} $today (automated daily check)"
+          git commit -qam "${label^} $today (automated weekly check)"
           git pull -q --rebase origin main
           git push -q origin main
           echo "badge now shows: $label, $today"
