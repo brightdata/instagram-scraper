@@ -95,7 +95,13 @@ jobs:
               *github.com/brightdata/instagram-scraper*) [ "$public" = "200" ] || continue ;;  # unreachable on a private fork
             esac
             code=$(curl -s -o /dev/null -L --retry 3 --max-time 30 -A "Mozilla/5.0" -w '%{http_code}' "$url" || echo 000)
-            if [ "$code" = "200" ]; then echo "200 $url"; else echo "::error::$code $url"; failed=1; fi
+            case "$code" in
+              200) echo "200 $url" ;;
+              # A 5xx after curl's retries is the server having a bad minute,
+              # not a dead link: GitHub answered 502 for an issue page once.
+              5??) echo "::warning::$code $url (server error, link not judged)" ;;
+              *) echo "::error::$code $url"; failed=1 ;;
+            esac
           done
           [ "$failed" = 0 ] || exit 1
       - name: Fetch the posts from Instagram
