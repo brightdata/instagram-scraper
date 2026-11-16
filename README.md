@@ -145,7 +145,7 @@ runs every other day, and the badge at the top is the latest result.
 | a profile URL | recent posts | `client.search.instagram.posts(url, num_of_posts=5)` |
 | a username | the profile | `client.search.instagram.profiles("nasa")` |
 | a profile URL | the profile | `client.scrape.instagram.profiles(url)` |
-| a profile URL | recent reels | `client.search.instagram.reels(url, num_of_posts=5, timeout=420)` |
+| a profile URL | recent reels | `client.search.instagram.reels_all(url, num_of_posts=5, timeout=420)` |
 | a profile URL | every reel ever | `client.search.instagram.reels_all(url)`, one credit per reel the account has posted |
 | post URLs | those posts | `client.scrape.instagram.posts([url, url])` |
 | reel URLs | those reels | `client.scrape.instagram.reels([url])` |
@@ -221,6 +221,7 @@ with SyncBrightDataClient(auto_create_zones=False) as client:
         num_of_posts=3,
         start_date="08-01-2026",   # MM-DD-YYYY
         end_date="09-07-2026",
+        timeout=420,
     )
     for post in result.data:
         print(post["date_posted"], post["content_type"], post["url"])
@@ -245,7 +246,7 @@ No URL needed. The record carries the account's followers count and post count.
 from brightdata import SyncBrightDataClient
 
 with SyncBrightDataClient(auto_create_zones=False) as client:
-    profile = client.search.instagram.profiles("nasa").data[0]
+    profile = client.search.instagram.profiles("nasa", timeout=420).data[0]
     print(profile["account"], "followers:", profile["followers"], "posts:", profile["posts_count"])
 ```
 
@@ -271,20 +272,23 @@ with SyncBrightDataClient(auto_create_zones=False) as client:
 
 ### Scrape Instagram reels from a profile
 
-Reels discovery is slower. The default 180-second timeout expired; 420 did not.
+Use `reels_all`. On 16 Nov 2026, `search.instagram.reels` returned one
+`dead_page` error row instead of reels for every profile tested (nasa, natgeo,
+espn), while `reels_all` returned the reels in 90 seconds. Reels discovery can
+pass the default 180-second timeout, so set 420.
 
 ```python
 from brightdata import SyncBrightDataClient
 
 with SyncBrightDataClient(auto_create_zones=False) as client:
-    reels = client.search.instagram.reels("https://www.instagram.com/nasa/", num_of_posts=2, timeout=420)
+    reels = client.search.instagram.reels_all("https://www.instagram.com/nasa/", num_of_posts=2, timeout=420)
     for reel in reels.data:
         print(reel["date_posted"], reel["url"])
 ```
 
 ```
-2026-08-18T19:37:40.000Z https://www.instagram.com/p/DcMXl1IPNtB/
-2026-09-05T01:00:10.000Z https://www.instagram.com/p/Dc4u1yKPj_s/
+2026-11-09T16:47:12.000Z https://www.instagram.com/reel/DfhyUf-vhkA/
+2026-11-12T17:53:22.000Z https://www.instagram.com/reel/DfpowZdlfMz/
 ```
 
 ## Instagram post data fields (JSON)
